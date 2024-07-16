@@ -22,16 +22,37 @@ app.get('/test', function (req, res) {
         console.log('TOKEN ERROR')
         res.send('No such user')
     }
-
 })
 
 app.post('/login', (req, res) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    console.log(email, password)
 
-    var token = jwt.sign({ email, password }, secretWord, { expiresIn: '1h' });
-    res.json({ token })
+    let token = req.header('authorization');
+    token && (token = token.split(' ')[1]);
+    let email;
+    let password;
+    try {
+        var decoded = jwt.verify(token, secretWord);
+        email = decoded.email;
+        password = decoded.password;
+    } catch (err) {
+        console.log('No token');
+    }
+
+    if (!email) email = req.body.email;
+    if (!password) password = req.body.password;
+
+    if (!email || !password) {
+        res.json({});
+    } else {
+        // validate user with {email} and {password}
+        let isUserValid = true;
+        if (isUserValid) {
+            token = jwt.sign({ email, password }, secretWord)
+            res.json({ email, password, token });
+        } else {
+            res.json({});
+        }
+    }
 })
 
 app.listen(3000)
